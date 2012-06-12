@@ -1,0 +1,5 @@
+@author Marcelo Gornstein <marcelog@gmail.com>
+@copyright Marcelo Gornstein
+@title ehttp Application
+@doc ehttp is a library application for OTP, suitable to handle HTTP requests and responses, with headers and cookies
+

@@ -12,3 +12,6 @@ more with erlang while learning it, so I dont recommend you
 Please send your comments to marcelog@gmail.com, I'll be glad
 to improve and/or correct things!
 
+Installation
+------------
+Find the build at the CI server: http://ci.marcelog.name:8080/job/ehttp/

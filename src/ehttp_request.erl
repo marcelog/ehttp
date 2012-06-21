@@ -23,11 +23,13 @@
 -github("https://github.com/marcelog").
 -homepage("http://marcelog.github.com/").
 -license("Apache License 2.0").
--include_lib("eunit/include/eunit.hrl").
 
 -export([new_request/6, new_request/3, marshall/1, unmarshall/1]).
+-export([get_host_port_path/1, get_headers/1, get_path_raw/1, get_host_raw/1]).
 
 -type path() :: binary().
+-type host() :: binary().
+-type scheme() :: binary().
 -type request_data() :: {atom(), term()}.
 -type request() :: [request_data()].
 -export_type([path/0, request/0]).
@@ -152,4 +154,65 @@ marshall_req_variables(Vars) when is_list(Vars) ->
 get_value(List, Key) ->
     {Key, Value} = lists:keyfind(Key, 1, List),
     Value.
+
+%% @doc Returns path AS IT IS (it MAY be absolute: http://host/path).
+-spec get_path_raw(Request::request()) -> path().
+get_path_raw(Request) ->
+    get_value(Request, path).
+
+%% @doc Returns host AS IT IS.
+-spec get_host_raw(Request::request()) -> host().
+get_host_raw(Request) ->
+    Headers = get_headers(Request),
+    case ehttp_header:get_single(Headers, <<"host">>) of
+        notfound -> unknown;
+        Host -> Host
+    end.
+
+%% @doc Returns the target host, port, and path for this request.
+-spec get_host_port_path(Request::request()) -> binary().
+get_host_port_path(Request) ->
+    Headers = get_headers(Request),
+    {RetHost, RetPort, RetPath} = case get_host_raw(Request) of
+        unknown ->
+            Path = get_path_raw(Request),
+            case ehttp_bin:split_by_char(Path, <<"/">>, false) of
+                [Scheme, Host, RealPath] ->
+                    {H, P} = extract_host_port(Host, Scheme),
+                    {H, P, RealPath};
+                _ -> {unknown, unknown, Path}
+            end;
+        Host ->
+            {H, P} = extract_host_port(Host, <<"http:">>),
+            {H, P, get_path_raw(Request)}
+    end,
+    {RetHost, RetPort, RetPath}.
+
+%% @doc Given a binary such as &lt;&lt;"localhost:80"&gt;&gt; it will extract
+%% the host and port parts. Scheme is used to get a default port when
+%% HostPortBin does not have it.
+-spec extract_host_port(
+    HostPortBin::binary(), Scheme::scheme()
+) -> {binary(), binary()}.
+extract_host_port(HostPortBin, Scheme) ->
+    case ehttp_bin:split_by_char(HostPortBin, <<":">>, false) of
+        [Host] -> {Host, get_port_for_scheme(Scheme)};
+        [Host, Port] -> {Host, list_to_integer(binary_to_list(Port))}
+    end.
+
+%% @doc Returns the headers for this request.
+-spec get_headers(Request::request()) -> ehttp_header:headers().
+get_headers(Request) ->
+    get_value(Request, headers).
+
+%% @doc Returns the default port for the given scheme, after being split
+%% from the uri by split_by_char with &lt&lt":"&gt;&gt;.
+-spec get_port_for_scheme(Scheme::scheme()) -> binary().
+get_port_for_scheme(Scheme) ->
+    case ehttp_bin:lc(Scheme) of
+        <<"ftp:">> -> 21;
+        <<"https:">> -> 443;
+        <<"http:">> -> 80;
+        <<"">> -> 80
+    end.
 

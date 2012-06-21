@@ -176,6 +176,44 @@ can_unmarshall_multiple_cookies_in_one_header(_SetupData) ->
     Data = [<<"GET /index.html HTTP/1.1">>,<<"cookie:a=b;c=d">>],
     [?_assertEqual(Req, ehttp_request:unmarshall(Data))].
 
+can_get_host_port_path(_SetupData) ->
+    Data1 = [<<"GET http://host.com:8080/index.html HTTP/1.1">>, <<"key:value">>],
+    Req1 = ehttp_request:unmarshall(Data1),
+
+    Data2 = [<<"GET http://host.com/index.html HTTP/1.1">>, <<"key:value">>],
+    Req2 = ehttp_request:unmarshall(Data2),
+
+    Data3 = [<<"GET index.html HTTP/1.1">>, <<"host:host.com:8080">>],
+    Req3 = ehttp_request:unmarshall(Data3),
+
+    Data4 = [<<"GET index.html HTTP/1.1">>, <<"host:host.com">>],
+    Req4 = ehttp_request:unmarshall(Data4),
+
+    Data5 = [<<"GET index.html HTTP/1.1">>],
+    Req5 = ehttp_request:unmarshall(Data5),
+    [
+        ?_assertEqual(
+            {<<"host.com">>, 8080, <<"index.html">>},
+            ehttp_request:get_host_port_path(Req1)
+        ),
+        ?_assertEqual(
+            {<<"host.com">>, 80, <<"index.html">>},
+            ehttp_request:get_host_port_path(Req2)
+        ),
+        ?_assertEqual(
+            {<<"host.com">>, 8080, <<"index.html">>},
+            ehttp_request:get_host_port_path(Req3)
+        ),
+        ?_assertEqual(
+            {<<"host.com">>, 80, <<"index.html">>},
+            ehttp_request:get_host_port_path(Req4)
+        ),
+        ?_assertEqual(
+            {unknown, unknown, <<"index.html">>},
+            ehttp_request:get_host_port_path(Req5)
+        )
+    ].
+
 ehttp_request_test_() ->
     {setup,
         fun start/0,
@@ -191,7 +229,8 @@ ehttp_request_test_() ->
                 can_unmarshall_versions(SetupData),
                 can_unmarshall_variables(SetupData),
                 can_unmarshall_multiple_cookies_in_one_header(SetupData),
-                can_marshall_cookies(SetupData)
+                can_marshall_cookies(SetupData),
+                can_get_host_port_path(SetupData)
             ]}
         end
     }.

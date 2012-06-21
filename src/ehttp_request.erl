@@ -184,7 +184,11 @@ get_host_port_path(Request) ->
             end;
         Host ->
             {H, P} = extract_host_port(Host, <<"http:">>),
-            {H, P, get_path_raw(Request)}
+            Path = get_path_raw(Request),
+            case ehttp_bin:split_by_char(Path, <<"/">>, false) of
+                [Scheme, Host, RealPath] -> {H, P, RealPath};
+                _ -> {H, P, Path}
+            end
     end,
     {RetHost, RetPort, RetPath}.
 

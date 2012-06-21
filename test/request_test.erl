@@ -191,6 +191,9 @@ can_get_host_port_path(_SetupData) ->
 
     Data5 = [<<"GET index.html HTTP/1.1">>],
     Req5 = ehttp_request:unmarshall(Data5),
+
+    Data6 = [<<"GET http://host.com:8080/index.html HTTP/1.1">>, <<"host:host.com:8080">>],
+    Req6 = ehttp_request:unmarshall(Data6),
     [
         ?_assertEqual(
             {<<"host.com">>, 8080, <<"index.html">>},
@@ -211,6 +214,10 @@ can_get_host_port_path(_SetupData) ->
         ?_assertEqual(
             {unknown, unknown, <<"index.html">>},
             ehttp_request:get_host_port_path(Req5)
+        ),
+        ?_assertEqual(
+            {<<"host.com">>, 8080, <<"index.html">>},
+            ehttp_request:get_host_port_path(Req6)
         )
     ].
 

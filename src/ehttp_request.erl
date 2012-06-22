@@ -26,7 +26,9 @@
 
 -export([new_request/6, new_request/3, marshall/1, unmarshall/1]).
 -export([get_host_port_path/1, get_path_raw/1, get_host_raw/1]).
--export([get_headers/1, get_method/1, get_version/1]).
+-export([
+    get_headers/1, get_method/1, get_version/1, get_cookies/1, get_variables/1
+]).
 
 -type path() :: binary().
 -type host() :: binary().
@@ -173,7 +175,6 @@ get_host_raw(Request) ->
 %% @doc Returns the target host, port, and path for this request.
 -spec get_host_port_path(Request::request()) -> binary().
 get_host_port_path(Request) ->
-    Headers = get_headers(Request),
     {RetHost, RetPort, RetPath} = case get_host_raw(Request) of
         unknown ->
             Path = get_path_raw(Request),
@@ -187,7 +188,7 @@ get_host_port_path(Request) ->
             {H, P} = extract_host_port(Host, <<"http:">>),
             Path = get_path_raw(Request),
             case ehttp_bin:split_by_char(Path, <<"/">>, false) of
-                [Scheme, Host, RealPath] -> {H, P, RealPath};
+                [_Scheme, Host, RealPath] -> {H, P, RealPath};
                 _ -> {H, P, Path}
             end
     end,
@@ -219,6 +220,16 @@ get_version(Request) ->
 -spec get_headers(Request::request()) -> ehttp_header:headers().
 get_headers(Request) ->
     get_value(Request, headers).
+
+%% @doc Returns the headers for this request.
+-spec get_variables(Request::request()) -> ehttp_variable:variables().
+get_variables(Request) ->
+    get_value(Request, req_vars).
+
+%% @doc Returns the cookies for this request.
+-spec get_cookies(Request::request()) -> ehttp_cookie:cookies().
+get_cookies(Request) ->
+    get_value(Request, cookies).
 
 %% @doc Returns the default port for the given scheme, after being split
 %% from the uri by split_by_char with &lt&lt":"&gt;&gt;.

@@ -26,7 +26,7 @@
 
 -export([new_request/6, new_request/3, marshall/1, unmarshall/1]).
 -export([get_host_port_path/1, get_path_raw/1, get_host_raw/1]).
--export([get_headers/1, get_method/1]).
+-export([get_headers/1, get_method/1, get_version/1]).
 
 -type path() :: binary().
 -type host() :: binary().
@@ -209,6 +209,11 @@ extract_host_port(HostPortBin, Scheme) ->
 -spec get_method(Request::request()) -> ehttp_http:method().
 get_method(Request) ->
     get_value(Request, method).
+
+%% @doc Returns the HTTP version used for this request.
+-spec get_version(Request::request()) -> ehttp_http:version().
+get_version(Request) ->
+    get_value(Request, version).
 
 %% @doc Returns the headers for this request.
 -spec get_headers(Request::request()) -> ehttp_header:headers().

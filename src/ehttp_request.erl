@@ -204,6 +204,11 @@ extract_host_port(HostPortBin, Scheme) ->
         [Host, Port] -> {Host, list_to_integer(binary_to_list(Port))}
     end.
 
+%% @doc Returns the method used for this request.
+-spec get_method(Request::request()) -> ehttp_http:method().
+get_method(Request) ->
+    get_value(Request, method).
+
 %% @doc Returns the headers for this request.
 -spec get_headers(Request::request()) -> ehttp_header:headers().
 get_headers(Request) ->

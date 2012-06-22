@@ -25,7 +25,8 @@
 -license("Apache License 2.0").
 
 -export([new_request/6, new_request/3, marshall/1, unmarshall/1]).
--export([get_host_port_path/1, get_headers/1, get_path_raw/1, get_host_raw/1]).
+-export([get_host_port_path/1, get_path_raw/1, get_host_raw/1]).
+-export([get_headers/1, get_method/1]).
 
 -type path() :: binary().
 -type host() :: binary().

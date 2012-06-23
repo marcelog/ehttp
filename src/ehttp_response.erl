@@ -1,5 +1,4 @@
 -module(ehttp_response).
--include_lib("eunit/include/eunit.hrl").
 
 -type response_data() :: {atom(), term()}.
 -type response() :: [response_data()].

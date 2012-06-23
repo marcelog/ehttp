@@ -188,10 +188,10 @@ get_scheme_host_port_path(Request) ->
             {Host, Port, RetPath} = extract_host_port_path(Scheme, HostPath),
             {Scheme, Host, Port, RetPath};
         _ -> case get_host_raw(Request) of % Try using the host: header
-                unknown -> {unknown, unknown, unknown, Path}; % out of ideas...
+                unknown -> {unknown, unknown, unknown, path_to_absolute(Path)};
                 Host ->
                     {H, P} = extract_host_port(Host, <<"http">>),
-                    {<<"http">>, H, P, Path}
+                    {<<"http">>, H, P, path_to_absolute(Path)}
             end
     end.
 
@@ -200,9 +200,24 @@ get_scheme_host_port_path(Request) ->
     Scheme::binary(), HostPortPath::binary()
 ) -> {Host::binary(), Port::integer(), Path::binary()}.
 extract_host_port_path(Scheme, <<"//", Path/binary>>) ->
-    [Host, RealPath] = ehttp_bin:split_by_char(Path, <<"/">>, true),
-    {H, P} = extract_host_port(Host, Scheme),
-    {H, P, RealPath}.
+    {RHostPort, RPath} = case ehttp_bin:split_by_char(Path, <<"/">>, true) of
+        [H1] -> {H1, <<>>};
+        [H1, P1] -> {H1, P1}
+    end,
+    {H, P} = extract_host_port(RHostPort, Scheme),
+    {H, P, path_to_absolute(RPath)}.
+
+%% @doc Adds a "/" to the given path, or the original path if it already
+%% starts with "/".
+-spec path_to_absolute(PathBin::binary()) -> binary().
+path_to_absolute(<<>>) ->
+    <<"/">>;
+
+path_to_absolute(PathBin) ->
+    case PathBin of
+        <<"/", _Rest/binary>> -> PathBin;
+        Rest -> <<"/", Rest/binary>>
+    end.
 
 %% @doc Given a binary such as &lt;&lt;"localhost:80"&gt;&gt; it will extract
 %% the host and port parts. Scheme is used to get a default port when

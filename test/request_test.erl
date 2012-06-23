@@ -194,30 +194,37 @@ can_get_scheme_host_port_path(_SetupData) ->
 
     Data6 = [<<"GET http://host.com:8080/index.html HTTP/1.1">>, <<"host:host.com:8080">>],
     Req6 = ehttp_request:unmarshall(Data6),
+
+    Data7 = [<<"GET http://host.com:8080 HTTP/1.1">>, <<"host:host.com:8080">>],
+    Req7 = ehttp_request:unmarshall(Data7),
     [
         ?_assertEqual(
-            {<<"http">>, <<"host.com">>, 8080, <<"index.html">>},
+            {<<"http">>, <<"host.com">>, 8080, <<"/index.html">>},
             ehttp_request:get_scheme_host_port_path(Req1)
         ),
         ?_assertEqual(
-            {<<"http">>, <<"host.com">>, 80, <<"index.html">>},
+            {<<"http">>, <<"host.com">>, 80, <<"/index.html">>},
             ehttp_request:get_scheme_host_port_path(Req2)
         ),
         ?_assertEqual(
-            {<<"http">>, <<"host.com">>, 8080, <<"index.html">>},
+            {<<"http">>, <<"host.com">>, 8080, <<"/index.html">>},
             ehttp_request:get_scheme_host_port_path(Req3)
         ),
         ?_assertEqual(
-            {<<"http">>, <<"host.com">>, 80, <<"index.html">>},
+            {<<"http">>, <<"host.com">>, 80, <<"/index.html">>},
             ehttp_request:get_scheme_host_port_path(Req4)
         ),
         ?_assertEqual(
-            {unknown, unknown, unknown, <<"index.html">>},
+            {unknown, unknown, unknown, <<"/index.html">>},
             ehttp_request:get_scheme_host_port_path(Req5)
         ),
         ?_assertEqual(
-            {<<"http">>, <<"host.com">>, 8080, <<"index.html">>},
+            {<<"http">>, <<"host.com">>, 8080, <<"/index.html">>},
             ehttp_request:get_scheme_host_port_path(Req6)
+        ),
+        ?_assertEqual(
+            {<<"http">>, <<"host.com">>, 8080, <<"/">>},
+            ehttp_request:get_scheme_host_port_path(Req7)
         )
     ].
 

@@ -68,7 +68,7 @@ can_unmarshall(_SetupData) ->
         <<"X-XSS-Protection: 1; mode=block\r\n">>,
         <<"X-Frame-Options: SAMEORIGIN\r\n">>
     ],
-    Req = [{version,http_v11},
+    Resp = [{version,http_v11},
         {code,<<"302">>},
         {status,<<"Found">>},
         {headers,[{<<"location">>, [<<"http://www.domain.com/">>]},
@@ -100,7 +100,40 @@ can_unmarshall(_SetupData) ->
             }}
         ]}
     ],
-    [?_assertEqual(Req, ehttp_response:unmarshall(Data))].
+    [?_assertEqual(Resp, ehttp_response:unmarshall(Data))].
+
+can_is_chunked_transfer(_SetupData) ->
+    Data1 = [
+        <<"HTTP/1.1 302 Found\r\n">>,
+        <<"Location: http://www.domain.com/\r\n">>,
+        <<"Cache-Control: private\r\n">>,
+        <<"Content-Type: text/html; charset=UTF-8\r\n">>,
+        <<"Set-Cookie: key=value:a:b; expires=Sun, 08-Jun-2014 14:27:09 GMT; path=/; domain=.domain.com">>,
+        <<"Set-Cookie: key2=value2:a:b; expires=Sat, 08-Dec-2012 14:27:09 GMT; path=/; domain=.domain.com; HttpOnly">>,
+        <<"Date: Fri, 08 Jun 2012 14:27:09 GMT\r\n">>,
+        <<"Server: gws\r\n">>,
+        <<"Content-Length: 222\r\n">>,
+        <<"X-XSS-Protection: 1; mode=block\r\n">>,
+        <<"X-Frame-Options: SAMEORIGIN\r\n">>
+    ],
+    Resp1 = ehttp_response:unmarshall(Data1),
+    Data2 = [
+        <<"HTTP/1.1 302 Found\r\n">>,
+        <<"Location: http://www.domain.com/\r\n">>,
+        <<"Cache-Control: private\r\n">>,
+        <<"Transfer-Encoding: Chunked\r\n">>,
+        <<"Content-Type: text/html; charset=UTF-8\r\n">>,
+        <<"Set-Cookie: key=value:a:b; expires=Sun, 08-Jun-2014 14:27:09 GMT; path=/; domain=.domain.com">>,
+        <<"Set-Cookie: key2=value2:a:b; expires=Sat, 08-Dec-2012 14:27:09 GMT; path=/; domain=.domain.com; HttpOnly">>,
+        <<"Date: Fri, 08 Jun 2012 14:27:09 GMT\r\n">>,
+        <<"Server: gws\r\n">>,
+        <<"Content-Length: 222\r\n">>,
+        <<"X-XSS-Protection: 1; mode=block\r\n">>,
+        <<"X-Frame-Options: SAMEORIGIN\r\n">>
+    ],
+    Resp2 = ehttp_response:unmarshall(Data2),
+    [?_assertEqual(false, ehttp_response:is_chunked_transfer(Resp1)),
+    ?_assertEqual(true, ehttp_response:is_chunked_transfer(Resp2))].
 
 ehttp_response_test_() ->
     {setup,
@@ -109,7 +142,8 @@ ehttp_response_test_() ->
         fun(SetupData) ->
             {inparallel, [
                 can_marshall(SetupData),
-                can_unmarshall(SetupData)
+                can_unmarshall(SetupData),
+                can_is_chunked_transfer(SetupData)
             ]}
         end
     }.

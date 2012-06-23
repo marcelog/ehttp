@@ -7,7 +7,8 @@
 -type status() :: binary().
 -export_type([response/0, code/0, status/0]).
 
--export([new_response/5, marshall/1, unmarshall/1]).
+-export([new_response/5, marshall/1, unmarshall/1, is_chunked_transfer/1]).
+-export([get_headers/1]).
 
 %% @doc Returns a new response.
 -spec new_response(
@@ -76,3 +77,18 @@ marshall(Response) when is_list(Response) ->
 get_value(List, Key) ->
     {Key, Value} = lists:keyfind(Key, 1, List),
     Value.
+
+%% @doc Returns the headers for this response.
+-spec get_headers(Response::response()) -> ehttp_header:headers().
+get_headers(Response) ->
+    get_value(Response, headers).
+
+%% @doc Returns true if the response contains a header "transfer-encoding" with
+%% value "chunked".
+-spec is_chunked_transfer(Response::response()) -> boolean().
+is_chunked_transfer(Response) ->
+    Headers = get_headers(Response),
+    case ehttp_header:get_single(Headers, <<"transfer-encoding">>) of
+        notfound -> false;
+        Value -> ehttp_bin:lc(Value) =:= <<"chunked">>
+    end.

@@ -5,10 +5,12 @@
 -type response() :: [response_data()].
 -type code() :: binary().
 -type status() :: binary().
+-type data_length() :: integer() | chunked | unknown.
+
 -export_type([response/0, code/0, status/0]).
 
 -export([new_response/5, marshall/1, unmarshall/1, is_chunked_transfer/1]).
--export([get_headers/1]).
+-export([get_headers/1, get_data_size/1]).
 
 %% @doc Returns a new response.
 -spec new_response(
@@ -91,4 +93,22 @@ is_chunked_transfer(Response) ->
     case ehttp_header:get_single(Headers, <<"transfer-encoding">>) of
         notfound -> false;
         Value -> ehttp_bin:lc(Value) =:= <<"chunked">>
+    end.
+
+%% @doc Returns the size of the contents, whenever possible.
+-spec get_data_size(Response::response()) -> data_length().
+get_data_size(Response) ->
+    case is_chunked_transfer(Response) of
+        true -> chunked;
+        false -> get_length_by_header(Response)
+    end.
+
+%% @doc Returns the content of the header content-length as integer, or
+%% unknown.
+-spec get_length_by_header(Response::response()) -> notfound | integer().
+get_length_by_header(Response) ->
+    Headers = ehttp_response:get_headers(Response),
+    case ehttp_header:get_single(Headers, <<"content-length">>) of
+        notfound -> unknown;
+        Value -> list_to_integer(binary_to_list(Value))
     end.

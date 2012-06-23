@@ -112,7 +112,9 @@ unmarshall_cookies_from_binary(Bin, Cookies) when is_binary(Bin) ->
 %% without data, line by line.
 -spec unmarshall(List::[binary()]) -> request().
 unmarshall([Request | Headers]) ->
-    [Method, Path, HttpVersion] = ehttp_bin:split(Request),
+    [Method, Path, HttpVersion] = ehttp_bin:split(
+        ehttp_bin:trim_newline(Request)
+    ),
     Method2 = ehttp_http:unmarshall_method(ehttp_bin:lc(Method)),
     Version = ehttp_http:unmarshall_version(binary:part(HttpVersion, {5, 3})),
     {RealPath, VarsBin} = case ehttp_bin:split_by_char(Path, <<"?">>, true) of
@@ -127,7 +129,9 @@ unmarshall([Request | Headers]) ->
                 <<"cookie">> ->
                     NewAccC = lists:foldl(
                         fun(ValBin, Acc) ->
-                            unmarshall_cookies_from_binary(ValBin, Acc)
+                            unmarshall_cookies_from_binary(
+                                ehttp_bin:trim_newline(ValBin), Acc
+                            )
                         end,
                         AccC,
                         Values

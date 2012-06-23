@@ -67,8 +67,9 @@ marshall(Headers) when is_list(Headers) ->
 %% its key lower-cased.
 -spec unmarshall(Header::binary())  -> {header()}.
 unmarshall(Header) when is_binary(Header) ->
-    [<<Key/binary>>,<<Value/binary>>]
-        = ehttp_bin:split_by_char(Header, <<":">>, true),
+    [<<Key/binary>>,<<Value/binary>>] = ehttp_bin:split_by_char(
+        ehttp_bin:trim_newline(Header), <<":">>, true
+    ),
     {ehttp_bin:trim(ehttp_bin:lc(Key)), ehttp_bin:trim(Value)};
 
 unmarshall(HeadersBin) when is_list(HeadersBin) ->

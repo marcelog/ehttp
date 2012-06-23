@@ -26,7 +26,9 @@ new_response(Version, Code, Status, Headers, Cookies)
 %% without data, line by line.
 -spec unmarshall(List::[binary()]) -> response().
 unmarshall([Response | Headers]) ->
-    [HttpVersion, Code, Status] = ehttp_bin:split(Response),
+    [HttpVersion, Code, Status] = ehttp_bin:split(
+        ehttp_bin:trim_newline(Response)
+    ),
     Version = ehttp_http:unmarshall_version(binary:part(HttpVersion, {5, 3})),
     {NewHeaders, Cookies} = lists:foldl(
         fun({Key, Values}, {AccH, AccC}) ->
@@ -35,7 +37,9 @@ unmarshall([Response | Headers]) ->
                     NewAccC = lists:foldl(
                         fun(ValBin, Acc) ->
                             ehttp_cookie:set(
-                                Acc, ehttp_cookie:unmarshall(ValBin)
+                                Acc, ehttp_cookie:unmarshall(
+                                    ehttp_bin:trim_newline(ValBin)
+                                )
                             )
                         end,
                         AccC,

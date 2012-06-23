@@ -125,10 +125,10 @@ can_unmarshall_versions(_SetupData) ->
 
 can_unmarshall_variables(_SetupData) ->
     Data = [
-    <<"GET /index.html?a=b&c=hello%20world HTTP/1.1">>,
-    <<"Host: localhost">>,
-    <<"Content-Type: text/xml; charset=utf-8">>,
-    <<"Content-Length: length">>
+    <<"GET /index.html?a=b&c=hello%20world HTTP/1.1\r\n">>,
+    <<"Host: localhost\r\n">>,
+    <<"Content-Type: text/xml; charset=utf-8\r\n">>,
+    <<"Content-Length: length\r\n">>
     ],
     Req = ehttp_request:unmarshall(Data),
     Unmarshalled = [
@@ -221,6 +221,69 @@ can_get_host_port_path(_SetupData) ->
         )
     ].
 
+can_get_headers(_SetupData) ->
+    Data = [
+        <<"\tGET \t\t /index.html \t\t  HTTP/1.1  ">>,
+        <<"Host: localhost">>,
+        <<"Content-Type: text/xml; charset=utf-8">>,
+        <<"Content-Length: length">>
+    ],
+    Req = ehttp_request:unmarshall(Data),
+    Headers = [
+        {<<"host">>, [<<"localhost">>]},
+        {<<"content-type">>, [<<"text/xml; charset=utf-8">>]},
+        {<<"content-length">>, [<<"length">>]}
+    ],
+    [?_assertEqual(ehttp_request:get_headers(Req), Headers)].
+
+can_get_version(_SetupData) ->
+    Data = [
+        <<"\tGET \t\t /index.html \t\t  HTTP/1.1  ">>,
+        <<"Host: localhost">>,
+        <<"Content-Type: text/xml; charset=utf-8">>,
+        <<"Content-Length: length">>
+    ],
+    Req = ehttp_request:unmarshall(Data),
+    [?_assertEqual(ehttp_request:get_version(Req), http_v11)].
+
+can_get_method(_SetupData) ->
+    Data = [
+        <<"\tGET \t\t /index.html \t\t  HTTP/1.1  ">>,
+        <<"Host: localhost">>,
+        <<"Content-Type: text/xml; charset=utf-8">>,
+        <<"Content-Length: length">>
+    ],
+    Req = ehttp_request:unmarshall(Data),
+    [?_assertEqual(ehttp_request:get_method(Req), http_get)].
+
+can_get_cookies(_SetupData) ->
+    Data = [
+        <<"\tGET \t\t /index.html \t\t  HTTP/1.1  \r\n">>,
+        <<"Host: localhost\r\n">>,
+        <<"Content-Type: text/xml; charset=utf-8\r\n">>,
+        <<"Content-Length: length\r\n">>,
+        <<"cookie:PREF=ID=aaee33cc:U=asd123:FF=6:TM=122332:LM=122331:GM=7:S=asdqwe-asd\r\n">>,
+        <<"cookie:NID=asdqwe123\r\n">>
+    ],
+    Req = ehttp_request:unmarshall(Data),
+    Cookies1 = ehttp_cookie:new_cookies(),
+    Cookies2 = ehttp_cookie:set(Cookies1, <<"nid">>, <<"asdqwe123">>),
+    Cookies3 = ehttp_cookie:set(Cookies2, <<"pref">>, <<"ID=aaee33cc:U=asd123:FF=6:TM=122332:LM=122331:GM=7:S=asdqwe-asd">>),
+    [?_assertEqual(ehttp_request:get_cookies(Req), Cookies3)].
+
+can_get_req_vars(_SetupData) ->
+    Data = [
+        <<"\tGET \t\t /index.html?a=b&c=d \t\t  HTTP/1.1  ">>,
+        <<"Host: localhost">>,
+        <<"Content-Type: text/xml; charset=utf-8">>,
+        <<"Content-Length: length">>
+    ],
+    Req = ehttp_request:unmarshall(Data),
+    Vars1 = ehttp_variable:new_variables(),
+    Vars2 = ehttp_variable:set(Vars1, <<"a">>, <<"b">>),
+    Vars3 = ehttp_variable:set(Vars2, <<"c">>, <<"d">>),
+    [?_assertEqual(ehttp_request:get_variables(Req), Vars3)].
+
 ehttp_request_test_() ->
     {setup,
         fun start/0,
@@ -237,7 +300,12 @@ ehttp_request_test_() ->
                 can_unmarshall_variables(SetupData),
                 can_unmarshall_multiple_cookies_in_one_header(SetupData),
                 can_marshall_cookies(SetupData),
-                can_get_host_port_path(SetupData)
+                can_get_host_port_path(SetupData),
+                can_get_headers(SetupData),
+                can_get_method(SetupData),
+                can_get_version(SetupData),
+                can_get_cookies(SetupData),
+                can_get_req_vars(SetupData)
             ]}
         end
     }.

@@ -56,17 +56,17 @@ can_marshall(_SetupData) ->
 
 can_unmarshall(_SetupData) ->
     Data = [
-        <<"HTTP/1.1 302 Found">>,
-        <<"Location: http://www.domain.com/">>,
-        <<"Cache-Control: private">>,
-        <<"Content-Type: text/html; charset=UTF-8">>,
+        <<"HTTP/1.1 302 Found\r\n">>,
+        <<"Location: http://www.domain.com/\r\n">>,
+        <<"Cache-Control: private\r\n">>,
+        <<"Content-Type: text/html; charset=UTF-8\r\n">>,
         <<"Set-Cookie: key=value:a:b; expires=Sun, 08-Jun-2014 14:27:09 GMT; path=/; domain=.domain.com">>,
         <<"Set-Cookie: key2=value2:a:b; expires=Sat, 08-Dec-2012 14:27:09 GMT; path=/; domain=.domain.com; HttpOnly">>,
-        <<"Date: Fri, 08 Jun 2012 14:27:09 GMT">>,
-        <<"Server: gws">>,
-        <<"Content-Length: 222">>,
-        <<"X-XSS-Protection: 1; mode=block">>,
-        <<"X-Frame-Options: SAMEORIGIN">>
+        <<"Date: Fri, 08 Jun 2012 14:27:09 GMT\r\n">>,
+        <<"Server: gws\r\n">>,
+        <<"Content-Length: 222\r\n">>,
+        <<"X-XSS-Protection: 1; mode=block\r\n">>,
+        <<"X-Frame-Options: SAMEORIGIN\r\n">>
     ],
     Req = [{version,http_v11},
         {code,<<"302">>},

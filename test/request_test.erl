@@ -176,7 +176,7 @@ can_unmarshall_multiple_cookies_in_one_header(_SetupData) ->
     Data = [<<"GET /index.html HTTP/1.1">>,<<"cookie:a=b;c=d">>],
     [?_assertEqual(Req, ehttp_request:unmarshall(Data))].
 
-can_get_host_port_path(_SetupData) ->
+can_get_scheme_host_port_path(_SetupData) ->
     Data1 = [<<"GET http://host.com:8080/index.html HTTP/1.1">>, <<"key:value">>],
     Req1 = ehttp_request:unmarshall(Data1),
 
@@ -196,28 +196,28 @@ can_get_host_port_path(_SetupData) ->
     Req6 = ehttp_request:unmarshall(Data6),
     [
         ?_assertEqual(
-            {<<"host.com">>, 8080, <<"index.html">>},
-            ehttp_request:get_host_port_path(Req1)
+            {<<"http">>, <<"host.com">>, 8080, <<"index.html">>},
+            ehttp_request:get_scheme_host_port_path(Req1)
         ),
         ?_assertEqual(
-            {<<"host.com">>, 80, <<"index.html">>},
-            ehttp_request:get_host_port_path(Req2)
+            {<<"http">>, <<"host.com">>, 80, <<"index.html">>},
+            ehttp_request:get_scheme_host_port_path(Req2)
         ),
         ?_assertEqual(
-            {<<"host.com">>, 8080, <<"index.html">>},
-            ehttp_request:get_host_port_path(Req3)
+            {<<"http">>, <<"host.com">>, 8080, <<"index.html">>},
+            ehttp_request:get_scheme_host_port_path(Req3)
         ),
         ?_assertEqual(
-            {<<"host.com">>, 80, <<"index.html">>},
-            ehttp_request:get_host_port_path(Req4)
+            {<<"http">>, <<"host.com">>, 80, <<"index.html">>},
+            ehttp_request:get_scheme_host_port_path(Req4)
         ),
         ?_assertEqual(
-            {unknown, unknown, <<"index.html">>},
-            ehttp_request:get_host_port_path(Req5)
+            {unknown, unknown, unknown, <<"index.html">>},
+            ehttp_request:get_scheme_host_port_path(Req5)
         ),
         ?_assertEqual(
-            {<<"host.com">>, 8080, <<"index.html">>},
-            ehttp_request:get_host_port_path(Req6)
+            {<<"http">>, <<"host.com">>, 8080, <<"index.html">>},
+            ehttp_request:get_scheme_host_port_path(Req6)
         )
     ].
 
@@ -300,7 +300,7 @@ ehttp_request_test_() ->
                 can_unmarshall_variables(SetupData),
                 can_unmarshall_multiple_cookies_in_one_header(SetupData),
                 can_marshall_cookies(SetupData),
-                can_get_host_port_path(SetupData),
+                can_get_scheme_host_port_path(SetupData),
                 can_get_headers(SetupData),
                 can_get_method(SetupData),
                 can_get_version(SetupData),

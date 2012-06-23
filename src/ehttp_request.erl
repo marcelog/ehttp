@@ -25,7 +25,7 @@
 -license("Apache License 2.0").
 
 -export([new_request/6, new_request/3, marshall/1, unmarshall/1]).
--export([get_host_port_path/1, get_path_raw/1, get_host_raw/1]).
+-export([get_scheme_host_port_path/1, get_path_raw/1, get_host_raw/1]).
 -export([
     get_headers/1, get_method/1, get_version/1, get_cookies/1, get_variables/1
 ]).
@@ -176,27 +176,33 @@ get_host_raw(Request) ->
         Host -> Host
     end.
 
-%% @doc Returns the target host, port, and path for this request.
--spec get_host_port_path(Request::request()) -> binary().
-get_host_port_path(Request) ->
-    {RetHost, RetPort, RetPath} = case get_host_raw(Request) of
-        unknown ->
-            Path = get_path_raw(Request),
-            case ehttp_bin:split_by_char(Path, <<"/">>, false) of
-                [Scheme, Host, RealPath] ->
-                    {H, P} = extract_host_port(Host, Scheme),
-                    {H, P, RealPath};
-                _ -> {unknown, unknown, Path}
-            end;
-        Host ->
-            {H, P} = extract_host_port(Host, <<"http:">>),
-            Path = get_path_raw(Request),
-            case ehttp_bin:split_by_char(Path, <<"/">>, false) of
-                [_Scheme, Host, RealPath] -> {H, P, RealPath};
-                _ -> {H, P, Path}
+%% @doc Returns a tuple with the scheme, host, port, path for this
+%% request.
+-spec get_scheme_host_port_path(
+    Request::request()
+) -> {binary()|unknown, binary()|unknown, integer()|unknown, binary()|unknown}.
+get_scheme_host_port_path(Request) ->
+    Path = get_path_raw(Request),
+    case ehttp_bin:split_by_char(Path, <<":">>, true) of
+        [Scheme, HostPath] ->
+            {Host, Port, RetPath} = extract_host_port_path(Scheme, HostPath),
+            {Scheme, Host, Port, RetPath};
+        _ -> case get_host_raw(Request) of % Try using the host: header
+                unknown -> {unknown, unknown, unknown, Path}; % out of ideas...
+                Host ->
+                    {H, P} = extract_host_port(Host, <<"http">>),
+                    {<<"http">>, H, P, Path}
             end
-    end,
-    {RetHost, RetPort, RetPath}.
+    end.
+
+%% @doc Returns a tuple with the host, port, and path found.
+-spec extract_host_port_path(
+    Scheme::binary(), HostPortPath::binary()
+) -> {Host::binary(), Port::integer(), Path::binary()}.
+extract_host_port_path(Scheme, <<"//", Path/binary>>) ->
+    [Host, RealPath] = ehttp_bin:split_by_char(Path, <<"/">>, true),
+    {H, P} = extract_host_port(Host, Scheme),
+    {H, P, RealPath}.
 
 %% @doc Given a binary such as &lt;&lt;"localhost:80"&gt;&gt; it will extract
 %% the host and port parts. Scheme is used to get a default port when
@@ -240,9 +246,9 @@ get_cookies(Request) ->
 -spec get_port_for_scheme(Scheme::scheme()) -> binary().
 get_port_for_scheme(Scheme) ->
     case ehttp_bin:lc(Scheme) of
-        <<"ftp:">> -> 21;
-        <<"https:">> -> 443;
-        <<"http:">> -> 80;
+        <<"ftp">> -> 21;
+        <<"https">> -> 443;
+        <<"http">> -> 80;
         <<"">> -> 80
     end.
 

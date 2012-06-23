@@ -27,7 +27,7 @@
 %% API exports.
 -export([
     lc/1, trim_left/1, trim_right/1, trim/1, split/1, reverse/1,
-    parse_key_equal_value/1, split_by_char/3,
+    trim_newline/1, parse_key_equal_value/1, split_by_char/3,
     parse_key_values_by/2, encode/1, decode/1
 ]).
 
@@ -311,3 +311,9 @@ encode(<<>>, Acc) ->
 encode(<<Byte:8, Rest/binary>>, Acc) ->
     Encoded = encode(Byte),
     encode(Rest, <<Acc/binary, Encoded/binary>>).
+
+%% @doc Removes \r\n's from the end of the line.
+-spec trim_newline(BinString::binary()) -> binary().
+trim_newline(BinString) ->
+    LineNoCr = hd(split_by_char(BinString, <<"\r">>, true)),
+    hd(split_by_char(LineNoCr, <<"\n">>, true)).

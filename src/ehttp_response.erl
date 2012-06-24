@@ -28,8 +28,15 @@ new_response(Version, Code, Status, Headers, Cookies)
 %% without data, line by line.
 -spec unmarshall(List::[binary()]) -> response().
 unmarshall([Response | Headers]) ->
-    [HttpVersion, Code, Status] = ehttp_bin:split(
+    [HttpVersion, Code,StatusHead|StatusTail] = ehttp_bin:split(
         ehttp_bin:trim_newline(Response)
+    ),
+    Status = lists:foldl(
+        fun(Word, Acc) ->
+            <<Acc/binary, " ", Word/binary>>
+        end,
+        StatusHead,
+        StatusTail
     ),
     Version = ehttp_http:unmarshall_version(binary:part(HttpVersion, {5, 3})),
     {NewHeaders, Cookies} = lists:foldl(

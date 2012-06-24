@@ -56,7 +56,7 @@ can_marshall(_SetupData) ->
 
 can_unmarshall(_SetupData) ->
     Data = [
-        <<"HTTP/1.1 302 Found\r\n">>,
+        <<"HTTP/1.1 302 Found and this is the tail\r\n">>,
         <<"Location: http://www.domain.com/\r\n">>,
         <<"Cache-Control: private\r\n">>,
         <<"Content-Type: text/html; charset=UTF-8\r\n">>,
@@ -70,7 +70,7 @@ can_unmarshall(_SetupData) ->
     ],
     Resp = [{version,http_v11},
         {code,<<"302">>},
-        {status,<<"Found">>},
+        {status,<<"Found and this is the tail">>},
         {headers,[{<<"location">>, [<<"http://www.domain.com/">>]},
             {<<"cache-control">>, [<<"private">>]},
             {<<"content-type">>, [<<"text/html; charset=UTF-8">>]},

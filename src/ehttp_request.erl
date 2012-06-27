@@ -205,7 +205,11 @@ extract_host_port_path(Scheme, <<"//", Path/binary>>) ->
         [H1, P1] -> {H1, P1}
     end,
     {H, P} = extract_host_port(RHostPort, Scheme),
-    {H, P, path_to_absolute(RPath)}.
+    {H, P, path_to_absolute(RPath)};
+
+extract_host_port_path(<<Host/binary>>, <<Port/binary>>) -> % for connect method
+    {H, P} = extract_host_port(<<Host/binary, ":", Port/binary>>, <<"http">>),
+    {H, P, <<>>}.
 
 %% @doc Adds a "/" to the given path, or the original path if it already
 %% starts with "/".

@@ -176,6 +176,16 @@ can_unmarshall_multiple_cookies_in_one_header(_SetupData) ->
     Data = [<<"GET /index.html HTTP/1.1">>,<<"cookie:a=b;c=d">>],
     [?_assertEqual(Req, ehttp_request:unmarshall(Data))].
 
+can_get_scheme_host_port_path_for_connect(_SetupData) ->
+    Data1 = [<<"CONNECT host.com:443 HTTP/1.1">>],
+    Req1 = ehttp_request:unmarshall(Data1),
+    [
+        ?_assertEqual(
+            {<<"host.com">>, <<"host.com">>, 443, <<>>},
+            ehttp_request:get_scheme_host_port_path(Req1)
+        )
+    ].
+
 can_get_scheme_host_port_path(_SetupData) ->
     Data1 = [<<"GET http://host.com:8080/index.html HTTP/1.1">>, <<"key:value">>],
     Req1 = ehttp_request:unmarshall(Data1),
@@ -312,7 +322,8 @@ ehttp_request_test_() ->
                 can_get_method(SetupData),
                 can_get_version(SetupData),
                 can_get_cookies(SetupData),
-                can_get_req_vars(SetupData)
+                can_get_req_vars(SetupData),
+                can_get_scheme_host_port_path_for_connect(SetupData)
             ]}
         end
     }.

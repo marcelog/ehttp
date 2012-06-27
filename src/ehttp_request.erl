@@ -257,7 +257,7 @@ get_cookies(Request) ->
     get_value(Request, cookies).
 
 %% @doc Returns the default port for the given scheme, after being split
-%% from the uri by split_by_char with &lt&lt":"&gt;&gt;.
+%% from the uri by split_by_char with &lt;&lt;":"&gt;&gt;.
 -spec get_port_for_scheme(Scheme::scheme()) -> binary().
 get_port_for_scheme(Scheme) ->
     case ehttp_bin:lc(Scheme) of
